@@ -21,6 +21,7 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.AbsoluteEncoderConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.SparkAbsoluteEncoder.*;
@@ -40,6 +41,9 @@ public class SwerveMod implements SwerveModule
 
     private SparkFlexConfig mAngleMotorConfig;
     private SparkFlexConfig mDriveMotorConfig;
+
+    private AbsoluteEncoderConfig mAngleMotorEncoderConfig;
+    private AbsoluteEncoderConfig mDriveMotorEncoderConfig;
 
     private SparkAbsoluteEncoder angleEncoder;
     // private RelativeEncoder relAngleEncoder;
@@ -61,7 +65,12 @@ public class SwerveMod implements SwerveModule
     {
         this.moduleNumber = moduleNumber;
         this.angleOffset = moduleConstants.angleOffset;
-        
+
+        mDriveMotorConfig = new SparkFlexConfig();
+        mAngleMotorConfig = new SparkFlexConfig();
+
+        mDriveMotorEncoderConfig = new AbsoluteEncoderConfig();
+        mAngleMotorEncoderConfig = new AbsoluteEncoderConfig();
        
         /* Angle Motor Config */
         mDriveMotor = new SparkFlex(moduleConstants.driveMotorID,  MotorType.kBrushless);
@@ -91,11 +100,11 @@ public class SwerveMod implements SwerveModule
 
         //drive motor config
         mDriveMotorConfig
-            .inverted(true)
+            .inverted(false)
             .idleMode(IdleMode.kBrake)
             .smartCurrentLimit(SwerveConfig.driveContinuousCurrentLimit);
 
-        mDriveMotorConfig.encoder
+        mDriveMotorConfig.absoluteEncoder
             .positionConversionFactor(SwerveConfig.driveRevToMeters)
             .velocityConversionFactor(SwerveConfig.driveRpmToMetersPerSecond);
 
@@ -113,15 +122,19 @@ public class SwerveMod implements SwerveModule
             .idleMode(IdleMode.kBrake)
             .smartCurrentLimit(SwerveConfig.angleContinuousCurrentLimit);
 
-        mAngleMotorConfig.encoder
-            .positionConversionFactor(360);
+        mAngleMotorConfig.absoluteEncoder
+            .positionConversionFactor(SwerveConfig.angleConversionFactor);
 
         mAngleMotorConfig.closedLoop
             .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
             .pid(SwerveConfig.angleKP, SwerveConfig.angleKI, SwerveConfig.angleKD)
             .outputRange(-SwerveConfig.anglePower, SwerveConfig.anglePower);
+        
 
         mAngleMotor.configure(mAngleMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        angleEncoder = mAngleMotor.getAbsoluteEncoder();
+        driveEncoder = mDriveMotor.getAbsoluteEncoder();
         
     }
 

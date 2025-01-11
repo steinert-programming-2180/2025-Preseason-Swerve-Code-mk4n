@@ -13,6 +13,8 @@ public class SwerveConfig
     public static final double drivePower = 1;
     public static final double anglePower = 1;
 
+    public static final double angleConversionFactor = 360;
+
 
     public static final boolean invertGyro = true; // Always ensure Gyro is CCW+ CW-
 
